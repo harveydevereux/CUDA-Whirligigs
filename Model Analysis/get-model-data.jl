@@ -1,0 +1,91 @@
+using Plots
+using DelimitedFiles
+using LinearAlgebra
+using ProgressMeter
+using LsqFit
+using KernelDensity
+using Statistics
+using LaTeXStrings
+using StatsBase
+using Measures
+using JLD2
+using PyCall
+stats = pyimport("scipy.stats")
+include("../Analysis/AlphaShapes/AlphaShapes.jl")
+include("../Analysis/analysis-utils.jl")
+# this is usually an "overnighter"
+
+"""
+A wrapper to run the model and collect the trajectories
+"""
+function Sim(N,alpha,tau,v,mu,mur=1.,dt=1.0/900.0)
+    cmd = `../CUDAABP --initial-packing-fraction 0.5 -N $N -T 10 -a 1 -b 1 -alpha $alpha -tau $tau -dt $dt -mu $mu -mur $mur -v $v -Dr 2.34 --random-seed $(Int(floor(time()))) -silent 1`
+    run(cmd)
+    T = readdlm("trajectories.txt",',')
+    #h = Int(floor(size(T,1)/2))
+    d_data = T[:,1:2]
+    return d_data
+end
+
+Sim(10,1,1,1,30,1.);
+
+runs = 3
+Ps = [50,100,200]
+Ps = [200]
+
+n = 15
+
+alpha = collect(linspace(-2.0,0.0,n))
+tau = collect(linspace(0.0,30.0,n))
+
+tau = tau[2:8]
+alpha = alpha[2:8]
+
+DR = 2.34
+v0 = 26.0
+mu = 31.624014716770823
+
+bins_density = Float64.(logspace(1e-4,6.0,100))
+bins_time = 100
+
+Data = Dict()
+prog = Progress(runs*n*n*length(Ps))
+for a in alpha
+    for b in tau
+        for p in 1:length(Ps)
+            #@info Ps[p]
+            pdfs_model = zeros(runs,length(bins_density))
+            Ts = zeros(runs,300,Ps[p],2)
+            for r in 1:runs
+                D = Sim(Ps[p],a,b,v0,mu,1.);
+                for i in 1:size(Ts,2)
+                    for j in 1:size(Ts,3)
+                        # extract the trajectories 
+                        Ts[r,i,j,:] = D[(i-1)*Ps[p]+j,:]
+                    end
+                end
+                if b == 0.0
+                    # density is not recorded in simulation since the pre-factor is 0.0
+                    d = zeros(size(Ts,2),size(Ts,3))
+                    for i in 1:size(Ts,2)
+                        d[i,:] = Density(Ts[r,i,:,1:2]./2.0)
+                    end
+                    d = flatten(d)
+                else
+                    # density data from CUDA code
+                    d = readdlm("trajectories.txt",',')[:,4]
+                end
+                # extract second half of data
+                h = Int(floor(size(d,1)/2.))
+                kde = stats.gaussian_kde(d[h:end])
+                pdfs_model[r,:] = kde(bins_density)
+                next!(prog)
+            end
+            # save to dict
+            Data["$(Ps[p])-$a-$b"] = pdfs_model
+	    Data["Trajectory-$(Ps[p])-$a-$b"] = Ts
+        end
+    end
+end
+# write to this dir
+JLD2.@save "alpha-tau-pd-15.jld" Data

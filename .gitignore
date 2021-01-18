@@ -1,0 +1,9 @@
+*.json
+*.gif
+*.mp4
+*.png
+*.svg
+*.jpg
+*.ipynb
+NoteBooks/*
+CUDAABP
