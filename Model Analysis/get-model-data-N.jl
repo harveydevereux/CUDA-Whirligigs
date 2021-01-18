@@ -47,7 +47,7 @@ end
 
 d = Sim(10,1,1,1,30,1.);
 
- len = Int(ceil(size(d,1) / 10))
+len = Int(ceil(size(d,1) / 10))
 
 runs = 3
 
@@ -71,7 +71,7 @@ Data = Dict()
         D = Sim(Ps[p],alpha,tau,v0,mu,1.);
         for i in 1:size(Ts,2)
             for j in 1:size(Ts,3)
-                Ts[r,i,j,:] = D[(i-1)*Ps[p]+j+len,:]
+                Ts[r,i,j,:] = D[(i-1)*Ps[p]+j,:]
             end
         end
         d = readdlm("trajectories.txt",',')[:,4]
