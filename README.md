@@ -8,6 +8,24 @@
 
 [TROUBLESHOOTING.md](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/TROUBLESHOOTING.md)
 
+
+### Data
+
+Data in .csv form for N=50,100,200 datasets split into X, Y, and theta dimensions
+
+- 50
+  - [X](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/50-X.csv)
+  - [Y](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/50-Y.csv)
+  - [theta](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/50-theta.csv)
+- 100
+  - [X](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/100-X.csv)
+  - [Y](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/100-Y.csv)
+  - [theta](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/100-theta.csv)
+- 200
+  - [X](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/200-X.csv)
+  - [Y](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/200-Y.csv)
+  - [theta](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/200-theta.csv)
+
 ### Tests
 
 ```bash
@@ -29,7 +47,9 @@ $ julia-1.5 -O3 analysis.jl
 
 #### Model Data
 
-Precomputed model data is provided and the plots can be generated with (**Does *not* require CUDA**)
+Precomputed model data is provided internally [here](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/alpha-tau-pd-15.jld) for 10s runtime and externally (due to 1GB file size) [here](https://www.dropbox.com/s/ov1fpm10ogk0xfk/BeetleData.tar.gz?dl=0) for 30s 
+
+The plots can be generated with (**Does *not* require CUDA**).
 
 ```bash
 $ cd Model\ Analysis
@@ -91,23 +111,6 @@ running for 24 hours and repeating each function evaluation 3 times with 3 diffe
 ```bash
 $ julia-1.5 -O3 multi-opt.jl --gamma 0.75 --max-hours 24 --n-repeats 3
 ```
-
-### Data
-
-Data in .csv form for N=50,100,200 datasets split into X, Y, and theta dimensions
-
-- 50
-  - [X](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/50-X.csv)
-  - [Y](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/50-Y.csv)
-  - [theta](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/50-theta.csv)
-- 100
-  - [X](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/100-X.csv)
-  - [Y](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/100-Y.csv)
-  - [theta](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/100-theta.csv)
-- 200
-  - [X](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/200-X.csv)
-  - [Y](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/200-Y.csv)
-  - [theta](https://github.com/harveydevereux/CUDA-Whirligigs/blob/main/Data/200-theta.csv)
 
 ### Code Map
 
