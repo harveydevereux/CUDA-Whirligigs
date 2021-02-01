@@ -89,7 +89,7 @@ plot(layout=3,dpi=600,size=(900,900))
 Xs = [X50,X100,X200]
 for i in 1:size(Xs,1)
     X = Xs[i]
-    bx = Float64.(logspace(1.0e-4,1.0,100))
+    bx = Float64.(logspace(1.0e-4,3.0,100))
     # bin across time and find avg and std for density
     # pdf across time bins
     pdfs = TimeBinDensity(bx,100,X,length_scale=beetle_length)
@@ -97,7 +97,7 @@ for i in 1:size(Xs,1)
     pdf_e = std(pdfs,dims=1)[1,:]
     plot!(bx,pdf,ribbon=pdf_e,label="N=$(names[i])",linestyle=linestyles[i],linewidth=3,subplot=i)
     # effectively 0.0 at this point
-    xlims!(0.0,1.0)
+    xlims!(0.0,3.0)
     #ylims!(0.0,5.0)
 end
 plot!()
@@ -115,21 +115,21 @@ for i in 1:size(D,1)
 end
 plot!()
 # effectively 0.0 at this point
-xlims!(0,1.0)
+xlims!(0,3.0)
 ylabel!("Kernel Density Estimate of PDF")
 xlabel!("Local Density (square body lengths)")
 savefig("density-distributions.$(image_type)")
 
 names = ["50","100","200"]
 linestyles = [:dash,:solid,:dot]
-plot(layout=3,dpi=150,size=(600,600))
+plot(layout=(1,3),dpi=150,size=(1200,300))
 for i in 1:size(V,1)
     v = V[i][isnan.(V[i]).==false]
     speed_bins=linspace(0.0,60.0,100)
     pdfs = TimeBinDistribution(speed_bins,v;bins=100)
     pdf = mean(pdfs,dims=1)[1,:]
     pdf_e = std(pdfs,dims=1)[1,:]
-    plot!(speed_bins,pdf,ribbon=pdf_e,label="N=$(names[i])",linestyle=linestyles[i],linewidth=3,subplot=i)
+    plot!(speed_bins,pdf,ribbon=pdf_e,label="N=$(names[i])",linestyle=linestyles[i],linewidth=3,subplot=i,bottommargin=5mm,leftmargin=5mm)
     ylims!(0.0,maximum(pdf)+0.5,subplot=i)
 end
 plot!()
@@ -298,6 +298,21 @@ T,L,O = CollisionFreeTrajectories(C[1],X200)
 histogram(L,label="",dpi=600)
 savefig("collision-free-trajectory-length-distribution.$(image_type)")
 
+function thresh(x;l=minimum(x),u=maximum(x),dx=0.01)
+    X = collect(l:dx:u)
+    c = zeros(length(X))
+    for (i,xx) in enumerate(X)
+        c[i] = sum(x.>X[i])
+    end
+    return X,c
+end
+
+x,y = thresh(L.*1.0/30.0,dx=0.1)
+plot(x,y,label="")
+xlabel!("Minimum Collision Free Trajectory Length (seconds)")
+ylabel!("Number of Trajectories")
+savefig("collision-free-trajectory-count.$(image_type)")
+
 @info "Gathering orientation Velocity Correlation"
 
 C,t = NVCorr(O,1.0/30.0,4,2);
@@ -328,11 +343,6 @@ Cm = Cm[2:end]
 p2 = scatter(t,Cm,yerr=e./sqrt.(c),label="")
 plot!(tt,model(tt,fit_.param),label="Gaussian Fit",linewidth=3)
 savefig("velocity-orientation-correlation.$(image_type)")
-
-plot(collect(2:size(n,1)+1).*1.0/30.0,n,label="")
-xlabel!("Minimum Collision Free Trajectory Length (seconds)")
-ylabel!("Number of Trajectories")
-savefig("collision-free-trajectory-count.$(image_type)")
 
 
 data = [X50,X100,X200]

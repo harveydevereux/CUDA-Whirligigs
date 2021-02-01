@@ -44,7 +44,7 @@ runs = 3
 Ps = [50,100,200]
 n = 15
 # alpha and tau values used for the data
-alpha = collect(linspace(-2.0,0.0,n))
+Alpha = collect(linspace(-2.0,0.0,n))
 tau = collect(linspace(0.0,30.0,n))
 
 bins_density = Float64.(logspace(1e-4,6.0,100))
@@ -57,36 +57,66 @@ B_pdfs = [TimeBinDensity(BX,100,X50,length_scale=beetle_length),
 
 @info "Computing Phase Diagrams"
 @info "Looping over Alpha-Tau"
-prog = Progress((n)*(n)*length(Ps))
+BX = bins_density
+prog = Progress((n+1)*(n+1)*length(Ps))
 for p in 1:length(Ps)
-  plot(layout=(length(alpha)+1)*(length(tau)+1),size=(10000,10000))
-  plot!(xaxis=nothing,yaxis=nothing,bordercolor="white",subplot=1)
-  # tau axis label
-  for j in 1:n
-      annotate!(0.5,0.5,"$(round(tau[j],digits=3))",xaxis=nothing,yaxis=nothing,bordercolor="white",100,subplot=j+1)
-  end
-  # alpha axis label
-  for j in 1:n
-      annotate!(0.5,0.5,"$(round(reverse(alpha)[j],digits=3))",xaxis=nothing,yaxis=nothing,bordercolor="white",100,subplot=j*(n+1)+1)
-  end
-  i = n+2
-  for a in reverse(alpha)
-      for b in tau
-          pdfs = Data["$(Ps[p])-$a-$b"]
-          e = std(pdfs,dims=1)[1,:]
-          pdfs = mean(pdfs,dims=1)[1,:]
-          plot!(BX,pdfs,ribbon=e,label="",c="red",subplot=i+1,title="")
-          plot!(BX,mean(B_pdfs[p],dims=1)[1,:],ribbon=std(B_pdfs[p],dims=1)[1,:],label="",c="blue",subplot=i+1,fillalpha=0.1)
-          i += 1
-          next!(prog)
-          ylims!(0.0,Inf) # min 0.0, but max found as needed
-          if p == 1
-              xlims!(0,2.0)
-          else
-              xlims!(0,3.5)
-          end
-      end
-      i += 1
-  end
-  savefig("alpha-tau-pd-$(Ps[p]).png")
+    plot(layout=(length(Alpha)+1)*(length(tau)+1),size=(10000,10000))
+    plot!(xaxis=nothing,yaxis=nothing,bordercolor="white",subplot=1)
+    # tau axis label
+    for j in 1:n
+        annotate!(0.5,0.5,"$(round(tau[j],digits=3))",xaxis=nothing,yaxis=nothing,bordercolor="white",100,subplot=j+1)
+    end
+    # alpha axis label
+    for j in 1:n
+        annotate!(0.5,0.5,"$(round(-Alpha[j],digits=3))",xaxis=nothing,yaxis=nothing,bordercolor="white",100,subplot=j*(n+1)+1)
+    end
+    i = n+2
+    for a in Alpha
+        for b in tau
+            pdfs = Data["$(Ps[p])-$a-$b"]
+            e = std(pdfs,dims=1)[1,:]
+            pdfs = mean(pdfs,dims=1)[1,:]
+            plot!(BX,pdfs,ribbon=e,label="",c="red",subplot=i+1,title="")
+            plot!(BX,mean(B_pdfs[p],dims=1)[1,:],ribbon=std(B_pdfs[p],dims=1)[1,:],label="",c="blue",subplot=i+1,fillalpha=0.1)
+            i += 1
+            next!(prog)
+            ylims!(0.0,Inf) # min 0.0, but max found as needed
+            if p == 1
+                xlims!(0,2.0)
+            else
+                xlims!(0,3.5)
+            end
+            #plot!(xaxis=nothing,yaxis=nothing,bordercolor="white",subplot=i)
+        end
+        i += 1
+    end
+    savefig("alpha-tau-pd-$(Ps[p]).png")
 end
+
+JLD2.@load "N-pd.jld"
+
+bins_density = Float64.(logspace(1e-4,6.0,100))
+BX = bins_density
+
+plot(layout=(1,3),size=(1200,300))
+for (i,p) in enumerate(Ps)
+    pdfs = Data["N=$p"]["pdfs"]
+    plot!(BX,mean(pdfs,dims=1)[1,:],ribbon=std(pdfs,dims=1)[1,:],label="",c="red",subplot=i)
+    if p == 200
+        B_pdfs = TimeBinDensity(BX,100,X200,length_scale=beetle_length)
+        plot!(BX,mean(B_pdfs,dims=1)[1,:],ribbon=std(B_pdfs,dims=1)[1,:],label="",c="blue",subplot=i)
+        ylims!(0.0,2.,subplot=i)
+    elseif p == 100
+        B_pdfs = TimeBinDensity(BX,100,X100,length_scale=beetle_length)
+        plot!(BX,mean(B_pdfs,dims=1)[1,:],ribbon=std(B_pdfs,dims=1)[1,:],label="",c="blue",subplot=i)
+        ylims!(0.0,2.,subplot=i)
+    elseif p == 50
+        B_pdfs = TimeBinDensity(BX,100,X50,length_scale=beetle_length)
+        plot!(BX,mean(B_pdfs,dims=1)[1,:],ribbon=std(B_pdfs,dims=1)[1,:],label="",c="blue",subplot=i)
+        ylims!(0.0,5.,subplot=i)
+    end
+    xlims!(0,3.)
+end
+
+savefig("N-pd.svg")
+savefig("N-pd.png")
